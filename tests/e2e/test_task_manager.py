@@ -116,24 +116,37 @@ def test_app_main(_mock_write, mock_submit, mock_input, mock_title):
 @pytest.fixture(scope="module")
 def streamlit_app():
     """Fixture to start Streamlit app in background"""
-    with subprocess.Popen(
-        [
-            "streamlit",
-            "run",
-            str(Path(__file__).parent.parent.parent / "task_manager" / "app.py"),
-            "--server.port=8501",
-            "--server.headless=true",
-        ]
-    ) as process:
-        time.sleep(2)  # Give app time to start
+    process = None
+    try:
+        process = subprocess.Popen(
+            [
+                "streamlit",
+                "run",
+                str(Path(__file__).parent.parent.parent / "task_manager" / "app.py"),
+                "--server.port=8501",
+                "--server.headless=true",
+                "--server.enableCORS=false",
+                "--server.enableXsrfProtection=false",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        # Wait for server to start
+        time.sleep(3)
         yield
-        process.terminate()
+    finally:
+        if process:
+            process.terminate()
+            process.wait()
 
 
 def test_empty_task_submission():
     """Test submitting empty task shows error"""
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        try:
+            browser = p.chromium.launch(headless=True)
+        except Exception as e:
+            pytest.skip(f"Playwright browser not available: {str(e)}")
         page = browser.new_page()
         page.goto("http://localhost:8501")
 
@@ -143,10 +156,13 @@ def test_empty_task_submission():
         browser.close()
 
 
-def test_streamlit_interface():
+def test_streamlit_interface(streamlit_app):
     """Test the Streamlit UI with Playwright"""
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        try:
+            browser = p.chromium.launch(headless=True)
+        except Exception as e:
+            pytest.skip(f"Playwright browser not available: {str(e)}")
         page = browser.new_page()
 
         page.goto("http://localhost:8501")
