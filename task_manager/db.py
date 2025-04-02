@@ -18,11 +18,13 @@ class TaskDB:
                     user=os.getenv("POSTGRES_USER", "postgres"),
                     password=os.getenv("POSTGRES_PASSWORD", "postgres"),
                     host=os.getenv("DB_HOST", "localhost"),
-                    port=os.getenv("DB_PORT", "5432")
+                    port=os.getenv("DB_PORT", "5432"),
                 )
             except OperationalError as e:
                 if attempt == self.max_retries - 1:
-                    raise RuntimeError(f"Failed to connect to database after {self.max_retries} attempts") from e
+                    raise RuntimeError(
+                        f"Failed to connect to database after {self.max_retries} attempts"
+                    ) from e
                 time.sleep(self.retry_delay)
 
     def add_task(self, description):
