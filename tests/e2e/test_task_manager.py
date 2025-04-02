@@ -1,5 +1,10 @@
 import pytest
+import sys
+import os
 from playwright.sync_api import sync_playwright
+
+# Add parent directory to path so tests can find task_manager
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from task_manager.db import TaskDB
 
 @pytest.fixture(scope="module")
@@ -12,13 +17,13 @@ def task_db():
 def test_add_and_list_tasks(task_db):
     """Test adding and listing tasks"""
     # Clear any existing tasks
-    db.delete_all_tasks()
+    task_db.delete_all_tasks()
     
     # Add test task
-    db.add_task("Test task 1")
+    task_db.add_task("Test task 1")
     
     # Verify task exists
-    tasks = db.list_tasks()
+    tasks = task_db.list_tasks()
     assert len(tasks) == 1
     assert tasks[0]["description"] == "Test task 1"
 
