@@ -76,7 +76,31 @@ def test_delete_single_task(task_db):
     assert tasks[0]["description"] == "Task to keep"
 
 
-def test_db_schema(task_db):
+def test_db_schema_initialization(task_db):
+    """Test database schema is properly initialized"""
+    # Clear any existing schema
+    with task_db.conn.cursor() as cur:
+        cur.execute("DROP TABLE IF EXISTS tasks")
+        task_db.conn.commit()
+    
+    # Reinitialize database
+    new_db = TaskDB()
+    
+    # Verify table exists
+    with new_db.conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'tasks'
+            )
+            """
+        )
+        assert cur.fetchone()[0], "tasks table was not created"
+    
+    new_db.close()
+
+def test_db_schema_columns(task_db):
     """Test database schema exists and is correct"""
     # Verify table exists
     with task_db.conn.cursor() as cur:
@@ -105,6 +129,28 @@ def test_db_schema(task_db):
     assert "description" in columns
     assert columns["description"] == "text"
 
+
+def test_app_task_flow():
+    """Test complete task flow through the app"""
+    with TaskDB() as db:
+        db.delete_all_tasks()
+        
+        # Test empty state
+        tasks = db.list_tasks()
+        assert len(tasks) == 0
+        
+        # Test adding task
+        task_id = db.add_task("Test task")
+        assert task_id > 0
+        
+        # Test listing
+        tasks = db.list_tasks()
+        assert len(tasks) == 1
+        assert tasks[0]['description'] == "Test task"
+        
+        # Test deleting
+        db.delete_task(task_id)
+        assert len(db.list_tasks()) == 0
 
 @patch("streamlit.title")
 @patch("streamlit.text_input")
@@ -157,8 +203,8 @@ def test_empty_task_submission():
     with sync_playwright() as p:
         try:
             browser = p.chromium.launch(headless=True)
-        except (p.playwright._impl._errors.Error, RuntimeError) as e:
-            pytest.skip(f"Playwright browser not available: {str(e)}")
+        except Exception as e:
+            pytest.skip(f"Browser not available: {str(e)}")
         page = browser.new_page()
         page.goto("http://localhost:8501")
 
@@ -173,8 +219,8 @@ def test_streamlit_interface():
     with sync_playwright() as p:
         try:
             browser = p.chromium.launch(headless=True)
-        except (p.playwright._impl._errors.Error, RuntimeError) as e:
-            pytest.skip(f"Playwright browser not available: {str(e)}")
+        except Exception as e:
+            pytest.skip(f"Browser not available: {str(e)}")
         page = browser.new_page()
 
         page.goto("http://localhost:8501")

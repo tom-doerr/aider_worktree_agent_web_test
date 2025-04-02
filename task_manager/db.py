@@ -5,13 +5,18 @@ from psycopg2 import OperationalError
 
 
 class TaskDB:
+    def __enter__(self):
+        return self
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
     def __init__(self, max_retries=3, retry_delay=1):
         self.max_retries = max_retries
         self.retry_delay = retry_delay
         self.conn = self._connect_with_retry()
 
     def _connect_with_retry(self):
-        """Connect to PostgreSQL with retry logic"""
+        """Connect to PostgreSQL with retry logic and initialize schema"""
         last_error = None
         for attempt in range(self.max_retries):
             try:
@@ -22,6 +27,15 @@ class TaskDB:
                     host=os.getenv("DB_HOST", "localhost"),
                     port=os.getenv("DB_PORT", "5432"),
                 )
+                # Initialize schema if needed
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        CREATE TABLE IF NOT EXISTS tasks (
+                            id SERIAL PRIMARY KEY,
+                            description TEXT NOT NULL
+                        )
+                    """)
+                    conn.commit()
                 return conn
             except OperationalError as e:
                 last_error = e
