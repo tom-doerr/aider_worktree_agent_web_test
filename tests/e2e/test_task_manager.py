@@ -117,7 +117,7 @@ def streamlit_app():
         process.terminate()
 
 
-def test_streamlit_interface(_streamlit_app):
+def test_streamlit_interface(streamlit_app):
     """Test the Streamlit UI with Playwright"""
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
