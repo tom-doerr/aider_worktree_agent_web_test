@@ -64,26 +64,30 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 try:
     from task_manager.app import main
 except ImportError:
-    pytest.skip("Could not import task_manager.app - skipping app tests", allow_module_level=True)
+    pytest.skip(
+        "Could not import task_manager.app - skipping app tests",
+        allow_module_level=True,
+    )
 
 
-@patch('streamlit.title')
-@patch('streamlit.text_input')
-@patch('streamlit.form_submit_button')
-@patch('streamlit.write')
+@patch("streamlit.title")
+@patch("streamlit.text_input")
+@patch("streamlit.form_submit_button")
+@patch("streamlit.write")
 def test_app_main(mock_write, mock_submit, mock_input, mock_title):
     """Test the main app function"""
     mock_db = MagicMock()
     mock_db.list_tasks.return_value = [{"id": 1, "description": "Test task"}]
     mock_input.return_value = "Test task"
     mock_submit.return_value = True
-    
-    with patch('task_manager.app.TaskDB', return_value=mock_db):
+
+    with patch("task_manager.app.TaskDB", return_value=mock_db):
         main()
-    
+
     mock_title.assert_called_once_with("Task Manager")
     mock_db.add_task.assert_called_once_with("Test task")
     mock_db.list_tasks.assert_called_once()
+
 
 def test_streamlit_interface():
     """Test the Streamlit UI with Playwright"""
@@ -91,7 +95,7 @@ def test_streamlit_interface():
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
             page = browser.new_page()
-            
+
             # Start Streamlit app (assuming it runs on port 8501)
             page.goto("http://localhost:8501")
 
