@@ -118,7 +118,7 @@ def streamlit_app():
     """Fixture to start Streamlit app in background"""
     process = None
     try:
-        process = subprocess.Popen(
+        with subprocess.Popen(
             [
                 "streamlit",
                 "run",
@@ -130,7 +130,7 @@ def streamlit_app():
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-        )
+        ) as process:
         # Wait for server to start
         time.sleep(3)
         yield
@@ -145,7 +145,7 @@ def test_empty_task_submission():
     with sync_playwright() as p:
         try:
             browser = p.chromium.launch(headless=True)
-        except Exception as e:
+        except (playwright._impl._errors.Error, RuntimeError) as e:
             pytest.skip(f"Playwright browser not available: {str(e)}")
         page = browser.new_page()
         page.goto("http://localhost:8501")
@@ -156,7 +156,7 @@ def test_empty_task_submission():
         browser.close()
 
 
-def test_streamlit_interface(streamlit_app):
+def test_streamlit_interface(streamlit_server):
     """Test the Streamlit UI with Playwright"""
     with sync_playwright() as p:
         try:
