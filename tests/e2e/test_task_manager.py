@@ -42,6 +42,7 @@ def test_db_connection(task_db):
     assert task_db.conn is not None
     assert not task_db.conn.closed
 
+
 def test_streamlit_interface():
     """Test the Streamlit UI with Playwright"""
     with sync_playwright() as p:
@@ -59,8 +60,8 @@ def test_streamlit_interface():
         # Test adding a task
         page.fill("input", "Test task from UI")
         page.click("button:has-text('Add')")
-        
+
         # Verify task appears
         page.wait_for_selector("text=Test task from UI")
-        
+
         browser.close()

@@ -5,10 +5,7 @@ class TaskDB:
     def __init__(self):
         try:
             self.conn = psycopg2.connect(
-                dbname="tasks", 
-                user="postgres", 
-                password="postgres", 
-                host="localhost"
+                dbname="tasks", user="postgres", password="postgres", host="localhost"
             )
         except psycopg2.OperationalError as e:
             raise RuntimeError("Failed to connect to database") from e
