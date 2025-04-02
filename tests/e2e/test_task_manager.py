@@ -1,5 +1,5 @@
 import pytest
-import playwright._impl._errors
+from playwright.sync_api import Error as PlaywrightError
 import sys
 import subprocess
 import time
@@ -204,7 +204,7 @@ def test_empty_task_submission():
     with sync_playwright() as p:
         try:
             browser = p.chromium.launch(headless=True)
-        except (playwright._impl._errors.Error, RuntimeError) as e:
+        except (PlaywrightError, RuntimeError) as e:
             pytest.skip(f"Browser not available: {str(e)}")
         page = browser.new_page()
         page.goto("http://localhost:8501")
@@ -220,7 +220,7 @@ def test_streamlit_interface():
     with sync_playwright() as p:
         try:
             browser = p.chromium.launch(headless=True)
-        except (playwright._impl._errors.Error, RuntimeError) as e:
+        except (PlaywrightError, RuntimeError) as e:
             pytest.skip(f"Browser not available: {str(e)}")
         page = browser.new_page()
 
