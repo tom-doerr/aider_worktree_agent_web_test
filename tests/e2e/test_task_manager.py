@@ -1,12 +1,15 @@
 import pytest
 import sys
-import os
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 # Add project root to path so tests can find task_manager
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from task_manager.db import TaskDB  # pylint: disable=wrong-import-position
+try:
+    from task_manager.db import TaskDB
+except ImportError:
+    import task_manager.db
+    from task_manager.db import TaskDB
 
 
 @pytest.fixture(scope="module", name="task_db")
