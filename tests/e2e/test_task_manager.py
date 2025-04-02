@@ -3,13 +3,13 @@ from playwright.sync_api import sync_playwright
 from task_manager.db import TaskDB
 
 @pytest.fixture(scope="module")
-def db():
+def task_db():
     """Fixture providing database connection"""
     db = TaskDB()
     yield db
     db.close()
 
-def test_add_and_list_tasks(db):
+def test_add_and_list_tasks(task_db):
     """Test adding and listing tasks"""
     # Clear any existing tasks
     db.delete_all_tasks()
