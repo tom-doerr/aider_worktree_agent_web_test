@@ -53,14 +53,16 @@ def test_db_connection_failure(monkeypatch):
         TaskDB(max_retries=1, retry_delay=0)
 
 
+from unittest.mock import MagicMock
+from task_manager.app import main
+
+
 def test_app_main(monkeypatch):
     """Test the main app function"""
     mock_db = MagicMock()
     mock_db.list_tasks.return_value = [{"id": 1, "description": "Test task"}]
     
     monkeypatch.setattr("task_manager.app.TaskDB", lambda: mock_db)
-    
-    from task_manager.app import main
     main()
     
     mock_db.add_task.assert_called_once()
@@ -89,5 +91,5 @@ def test_streamlit_interface():
             page.wait_for_selector("text=Test task from UI")
 
             browser.close()
-    except Exception as e:  # pragma: no cover
+    except (RuntimeError, TimeoutError) as e:  # pragma: no cover
         pytest.skip(f"Skipping Playwright test - browser not available: {str(e)}")
