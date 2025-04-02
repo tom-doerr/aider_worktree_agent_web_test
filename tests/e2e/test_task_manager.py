@@ -63,6 +63,7 @@ def test_delete_all_tasks(task_db):
     task_db.delete_all_tasks()
     assert len(task_db.list_tasks()) == 0
 
+
 def test_db_schema(task_db):
     """Test database schema exists and is correct"""
     with task_db.conn.cursor() as cur:
