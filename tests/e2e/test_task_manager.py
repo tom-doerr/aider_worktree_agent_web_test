@@ -8,8 +8,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 try:
     from task_manager.db import TaskDB
 except ImportError:
-    import task_manager.db
-    from task_manager.db import TaskDB
+    from task_manager.db import TaskDB  # Second attempt if first fails
 
 
 @pytest.fixture(scope="module", name="task_db")
