@@ -11,9 +11,17 @@ class TaskDB:
         self.conn = self._connect_with_retry()
 
     def _connect_with_retry(self):
+        """Connect to PostgreSQL with retry logic"""
         for attempt in range(self.max_retries):
             try:
-                return psycopg2.connect(
+                conn = psycopg2.connect(
+                    dbname=os.getenv("POSTGRES_DB", "tasks"),
+                    user=os.getenv("POSTGRES_USER", "postgres"),
+                    password=os.getenv("POSTGRES_PASSWORD", "postgres"),
+                    host=os.getenv("DB_HOST", "localhost"),
+                    port=os.getenv("DB_PORT", "5432"),
+                )
+                return conn
                     dbname=os.getenv("POSTGRES_DB", "tasks"),
                     user=os.getenv("POSTGRES_USER", "postgres"),
                     password=os.getenv("POSTGRES_PASSWORD", "postgres"),

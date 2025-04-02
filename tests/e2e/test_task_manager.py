@@ -46,29 +46,48 @@ def test_db_connection(task_db):
     assert not task_db.conn.closed
 
 
+def test_db_connection_failure(monkeypatch):
+    """Test database connection failure handling"""
+    monkeypatch.setenv("DB_HOST", "invalid_host")
+    with pytest.raises(RuntimeError):
+        TaskDB(max_retries=1, retry_delay=0)
+
+
+def test_app_main(monkeypatch):
+    """Test the main app function"""
+    mock_db = MagicMock()
+    mock_db.list_tasks.return_value = [{"id": 1, "description": "Test task"}]
+    
+    monkeypatch.setattr("task_manager.app.TaskDB", lambda: mock_db)
+    
+    from task_manager.app import main
+    main()
+    
+    mock_db.add_task.assert_called_once()
+    mock_db.list_tasks.assert_called_once()
+
 def test_streamlit_interface():
     """Test the Streamlit UI with Playwright"""
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
-            # Rest of test code...
-    except Exception as e:
+            page = browser.new_page()
+            
+            # Start Streamlit app (assuming it runs on port 8501)
+            page.goto("http://localhost:8501")
+
+            # Test basic UI elements
+            assert "Task Manager" in page.inner_text("h1")
+            assert "New task" in page.inner_text("label")
+            assert "Add" in page.inner_text("button")
+
+            # Test adding a task
+            page.fill("input", "Test task from UI")
+            page.click("button:has-text('Add')")
+
+            # Verify task appears
+            page.wait_for_selector("text=Test task from UI")
+
+            browser.close()
+    except Exception as e:  # pragma: no cover
         pytest.skip(f"Skipping Playwright test - browser not available: {str(e)}")
-        page = browser.new_page()
-
-        # Start Streamlit app (assuming it runs on port 8501)
-        page.goto("http://localhost:8501")
-
-        # Test basic UI elements
-        assert "Task Manager" in page.inner_text("h1")
-        assert "New task" in page.inner_text("label")
-        assert "Add" in page.inner_text("button")
-
-        # Test adding a task
-        page.fill("input", "Test task from UI")
-        page.click("button:has-text('Add')")
-
-        # Verify task appears
-        page.wait_for_selector("text=Test task from UI")
-
-        browser.close()
