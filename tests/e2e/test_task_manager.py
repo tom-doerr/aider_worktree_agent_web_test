@@ -54,6 +54,8 @@ def test_db_connection_failure(monkeypatch):
 
 
 from unittest.mock import MagicMock
+# Add project root to path so tests can find task_manager
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from task_manager.app import main
 
 

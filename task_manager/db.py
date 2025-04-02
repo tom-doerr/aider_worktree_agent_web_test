@@ -12,6 +12,7 @@ class TaskDB:
 
     def _connect_with_retry(self):
         """Connect to PostgreSQL with retry logic"""
+        last_error = None
         for attempt in range(self.max_retries):
             try:
                 conn = psycopg2.connect(
@@ -23,11 +24,13 @@ class TaskDB:
                 )
                 return conn
             except OperationalError as e:
-                if attempt == self.max_retries - 1:
-                    raise RuntimeError(
-                        f"Failed to connect to database after {self.max_retries} attempts"
-                    ) from e
-                time.sleep(self.retry_delay)
+                last_error = e
+                if attempt < self.max_retries - 1:
+                    time.sleep(self.retry_delay)
+        
+        raise RuntimeError(
+            f"Failed to connect to database after {self.max_retries} attempts"
+        ) from last_error
 
     def add_task(self, description):
         with self.conn.cursor() as cur:
