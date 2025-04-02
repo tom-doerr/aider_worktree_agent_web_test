@@ -27,7 +27,7 @@ class TaskDB:
                 last_error = e
                 if attempt < self.max_retries - 1:
                     time.sleep(self.retry_delay)
-        
+
         raise RuntimeError(
             f"Failed to connect to database after {self.max_retries} attempts"
         ) from last_error

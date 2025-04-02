@@ -14,6 +14,7 @@ try:
 except ImportError as e:
     pytest.skip(f"Could not import task_manager modules: {e}", allow_module_level=True)
 
+
 @pytest.fixture(scope="module", name="task_db")
 def fixture_task_db():
     """Fixture providing database connection"""
@@ -55,22 +56,23 @@ def test_db_connection_failure(monkeypatch):
     with pytest.raises(RuntimeError):
         TaskDB(max_retries=1, retry_delay=0)
 
+
 def test_db_schema(task_db):
     """Test database schema exists and is correct"""
     with task_db.conn.cursor() as cur:
-        cur.execute("""
+        cur.execute(
+            """
             SELECT column_name, data_type 
             FROM information_schema.columns 
             WHERE table_name = 'tasks'
-        """)
+        """
+        )
         columns = {row[0]: row[1] for row in cur.fetchall()}
-        
+
     assert "id" in columns
     assert columns["id"] in ("integer", "bigint")
     assert "description" in columns
     assert columns["description"] == "text"
-
-
 
 
 @patch("streamlit.title")
@@ -95,24 +97,28 @@ def test_app_main(_mock_write, mock_submit, mock_input, mock_title):
 @pytest.fixture(scope="module")
 def streamlit_app():
     """Fixture to start Streamlit app in background"""
-    with subprocess.Popen([
-        "streamlit", "run", 
-        str(Path(__file__).parent.parent.parent / "task_manager" / "app.py"),
-        "--server.port=8501",
-        "--server.headless=true"
-    ]) as process:
+    with subprocess.Popen(
+        [
+            "streamlit",
+            "run",
+            str(Path(__file__).parent.parent.parent / "task_manager" / "app.py"),
+            "--server.port=8501",
+            "--server.headless=true",
+        ]
+    ) as process:
         time.sleep(2)  # Give app time to start
         yield
         process.terminate()
+
 
 def test_streamlit_interface(_streamlit_app):
     """Test the Streamlit UI with Playwright"""
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
-        
+
         page.goto("http://localhost:8501")
-        
+
         # Test basic UI elements
         expect(page.get_by_role("heading", name="Task Manager")).to_be_visible()
         expect(page.get_by_label("New task")).to_be_visible()
@@ -122,8 +128,8 @@ def test_streamlit_interface(_streamlit_app):
         test_task = "Test task from UI"
         page.get_by_label("New task").fill(test_task)
         page.get_by_role("button", name="Add").click()
-        
+
         # Verify task appears
         expect(page.get_by_text(test_task)).to_be_visible()
-        
+
         browser.close()
