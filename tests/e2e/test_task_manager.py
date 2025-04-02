@@ -142,9 +142,9 @@ def streamlit_server():
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         ) as process:
-        # Wait for server to start
-        time.sleep(3)
-        yield
+            # Wait for server to start
+            time.sleep(3)
+            yield
     finally:
         if process:
             process.terminate()
