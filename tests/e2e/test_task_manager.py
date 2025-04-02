@@ -100,7 +100,7 @@ def streamlit_app():
         str(Path(__file__).parent.parent.parent / "task_manager" / "app.py"),
         "--server.port=8501",
         "--server.headless=true"
-    ])
+    ]) as process:
     time.sleep(2)  # Give app time to start
     yield
     process.terminate()
