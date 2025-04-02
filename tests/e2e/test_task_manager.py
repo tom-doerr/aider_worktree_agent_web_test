@@ -101,9 +101,9 @@ def streamlit_app():
         "--server.port=8501",
         "--server.headless=true"
     ]) as process:
-    time.sleep(2)  # Give app time to start
-    yield
-    process.terminate()
+        time.sleep(2)  # Give app time to start
+        yield
+        process.terminate()
 
 def test_streamlit_interface(_streamlit_app):
     """Test the Streamlit UI with Playwright"""
