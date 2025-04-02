@@ -128,7 +128,7 @@ def streamlit_app():
         process.terminate()
 
 
-def test_empty_task_submission(streamlit_app):
+def test_empty_task_submission():
     """Test submitting empty task shows error"""
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
@@ -140,7 +140,7 @@ def test_empty_task_submission(streamlit_app):
         expect(page.get_by_text("Please enter a task description")).to_be_visible()
         browser.close()
 
-def test_streamlit_interface(streamlit_app):
+def test_streamlit_interface():
     """Test the Streamlit UI with Playwright"""
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
