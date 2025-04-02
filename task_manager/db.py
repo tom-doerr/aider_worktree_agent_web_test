@@ -36,10 +36,12 @@ class TaskDB:
         """Add a new task to the database"""
         if not description:
             raise ValueError("Task description cannot be empty")
-            
+
         try:
             with self.conn.cursor() as cur:
-                cur.execute("INSERT INTO tasks (description) VALUES (%s)", (description,))
+                cur.execute(
+                    "INSERT INTO tasks (description) VALUES (%s)", (description,)
+                )
                 self.conn.commit()
         except Exception as e:
             self.conn.rollback()

@@ -68,12 +68,14 @@ def test_db_schema(task_db):
     """Test database schema exists and is correct"""
     # First ensure table exists
     with task_db.conn.cursor() as cur:
-        cur.execute("""
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS tasks (
                 id SERIAL PRIMARY KEY,
                 description TEXT NOT NULL
             )
-        """)
+        """
+        )
         task_db.conn.commit()
 
     with task_db.conn.cursor() as cur:
@@ -134,11 +136,12 @@ def test_empty_task_submission():
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         page.goto("http://localhost:8501")
-        
+
         # Submit empty task
         page.get_by_role("button", name="Add").click()
         expect(page.get_by_text("Please enter a task description")).to_be_visible()
         browser.close()
+
 
 def test_streamlit_interface():
     """Test the Streamlit UI with Playwright"""
