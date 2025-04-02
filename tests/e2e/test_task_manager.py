@@ -1,15 +1,13 @@
 import pytest
 import sys
 from pathlib import Path
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, expect
+from unittest.mock import MagicMock, patch
 
 # Add project root to path so tests can find task_manager
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-try:
-    from task_manager.db import TaskDB
-except ImportError:
-    from task_manager.db import TaskDB  # Second attempt if first fails
-
+from task_manager.db import TaskDB
+from task_manager.app import main
 
 @pytest.fixture(scope="module", name="task_db")
 def fixture_task_db():
@@ -52,22 +50,22 @@ def test_db_connection_failure(monkeypatch):
     with pytest.raises(RuntimeError):
         TaskDB(max_retries=1, retry_delay=0)
 
+def test_db_schema(task_db):
+    """Test database schema exists and is correct"""
+    with task_db.conn.cursor() as cur:
+        cur.execute("""
+            SELECT column_name, data_type 
+            FROM information_schema.columns 
+            WHERE table_name = 'tasks'
+        """)
+        columns = {row[0]: row[1] for row in cur.fetchall()}
+        
+    assert "id" in columns
+    assert columns["id"] in ("integer", "bigint")
+    assert "description" in columns
+    assert columns["description"] == "text"
 
-from unittest.mock import MagicMock, patch
-import sys
-from pathlib import Path
 
-# Add project root to path so tests can find task_manager
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-# Import after path modification
-try:
-    from task_manager.app import main
-except ImportError:
-    pytest.skip(
-        "Could not import task_manager.app - skipping app tests",
-        allow_module_level=True,
-    )
 
 
 @patch("streamlit.title")
@@ -89,28 +87,41 @@ def test_app_main(mock_write, mock_submit, mock_input, mock_title):
     mock_db.list_tasks.assert_called_once()
 
 
-def test_streamlit_interface():
+@pytest.fixture(scope="module")
+def streamlit_app():
+    """Fixture to start Streamlit app in background"""
+    import subprocess
+    import time
+    
+    process = subprocess.Popen([
+        "streamlit", "run", 
+        str(Path(__file__).parent.parent.parent / "task_manager" / "app.py"),
+        "--server.port=8501",
+        "--server.headless=true"
+    ])
+    time.sleep(2)  # Give app time to start
+    yield
+    process.terminate()
+
+def test_streamlit_interface(streamlit_app):
     """Test the Streamlit UI with Playwright"""
-    try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            page = browser.new_page()
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        
+        page.goto("http://localhost:8501")
+        
+        # Test basic UI elements
+        expect(page.get_by_role("heading", name="Task Manager")).to_be_visible()
+        expect(page.get_by_label("New task")).to_be_visible()
+        expect(page.get_by_role("button", name="Add")).to_be_visible()
 
-            # Start Streamlit app (assuming it runs on port 8501)
-            page.goto("http://localhost:8501")
-
-            # Test basic UI elements
-            assert "Task Manager" in page.inner_text("h1")
-            assert "New task" in page.inner_text("label")
-            assert "Add" in page.inner_text("button")
-
-            # Test adding a task
-            page.fill("input", "Test task from UI")
-            page.click("button:has-text('Add')")
-
-            # Verify task appears
-            page.wait_for_selector("text=Test task from UI")
-
-            browser.close()
-    except (RuntimeError, TimeoutError) as e:  # pragma: no cover
-        pytest.skip(f"Skipping Playwright test - browser not available: {str(e)}")
+        # Test adding a task
+        test_task = "Test task from UI"
+        page.get_by_label("New task").fill(test_task)
+        page.get_by_role("button", name="Add").click()
+        
+        # Verify task appears
+        expect(page.get_by_text(test_task)).to_be_visible()
+        
+        browser.close()
