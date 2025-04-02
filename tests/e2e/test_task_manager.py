@@ -113,8 +113,8 @@ def test_app_main(_mock_write, mock_submit, mock_input, mock_title):
     mock_db.list_tasks.assert_called_once()
 
 
-@pytest.fixture(scope="module")
-def streamlit_app():
+@pytest.fixture(scope="module", name="streamlit_server")
+def streamlit_server():
     """Fixture to start Streamlit app in background"""
     process = None
     try:
