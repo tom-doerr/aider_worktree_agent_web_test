@@ -36,7 +36,9 @@ def main():
                     if st.button("Delete", key=f"delete_{task['id']}"):
                         try:
                             with db.conn.cursor() as cur:
-                                cur.execute("DELETE FROM tasks WHERE id = %s", (task['id'],))
+                                cur.execute(
+                                    "DELETE FROM tasks WHERE id = %s", (task["id"],)
+                                )
                                 db.conn.commit()
                             st.experimental_rerun()
                         except (RuntimeError, psycopg2.Error) as e:
