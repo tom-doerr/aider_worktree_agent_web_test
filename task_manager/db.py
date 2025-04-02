@@ -40,8 +40,8 @@ class TaskDB:
         try:
             with self.conn.cursor() as cur:
                 cur.execute(
-                    "INSERT INTO tasks (description) VALUES (%s) RETURNING id", 
-                    (description,)
+                    "INSERT INTO tasks (description) VALUES (%s) RETURNING id",
+                    (description,),
                 )
                 task_id = cur.fetchone()[0]
                 self.conn.commit()
