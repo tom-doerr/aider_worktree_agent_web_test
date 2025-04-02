@@ -1,4 +1,5 @@
 import pytest
+import playwright
 import sys
 import subprocess
 import time
@@ -156,7 +157,7 @@ def test_empty_task_submission():
     with sync_playwright() as p:
         try:
             browser = p.chromium.launch(headless=True)
-        except (playwright._impl._errors.Error, RuntimeError) as e:
+        except (p._impl._errors.Error, RuntimeError) as e:
             pytest.skip(f"Playwright browser not available: {str(e)}")
         page = browser.new_page()
         page.goto("http://localhost:8501")
@@ -167,12 +168,12 @@ def test_empty_task_submission():
         browser.close()
 
 
-def test_streamlit_interface(streamlit_server):
+def test_streamlit_interface():
     """Test the Streamlit UI with Playwright"""
     with sync_playwright() as p:
         try:
             browser = p.chromium.launch(headless=True)
-        except Exception as e:
+        except (p._impl._errors.Error, RuntimeError) as e:
             pytest.skip(f"Playwright browser not available: {str(e)}")
         page = browser.new_page()
 
