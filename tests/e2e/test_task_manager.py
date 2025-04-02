@@ -1,43 +1,44 @@
 import pytest
 import sys
 import os
+from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 # Add project root to path so tests can find task_manager
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
-from task_manager.db import TaskDB
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from task_manager.db import TaskDB  # pylint: disable=wrong-import-position
 
 
-@pytest.fixture(scope="module")
-def db_connection():
+@pytest.fixture(scope="module", name="task_db")
+def fixture_task_db():
     """Fixture providing database connection"""
     db = TaskDB()
     yield db
     db.close()
 
 
-def test_add_and_list_tasks(db_connection):
+def test_add_and_list_tasks(task_db):
     """Test adding and listing tasks"""
     # Clear any existing tasks
-    db_connection.delete_all_tasks()
+    task_db.delete_all_tasks()
 
     # Add test task
-    db_connection.add_task("Test task 1")
+    task_db.add_task("Test task 1")
 
     # Verify task exists
-    tasks = db_connection.list_tasks()
+    tasks = task_db.list_tasks()
     assert len(tasks) == 1
     assert tasks[0]["description"] == "Test task 1"
 
     # Test empty case
-    db_connection.delete_all_tasks()
-    assert len(db_connection.list_tasks()) == 0
+    task_db.delete_all_tasks()
+    assert len(task_db.list_tasks()) == 0
 
 
-def test_db_connection(db_connection):
+def test_db_connection(task_db):
     """Test database connection is working"""
-    assert db_connection.conn is not None
-    assert not db_connection.conn.closed
+    assert task_db.conn is not None
+    assert not task_db.conn.closed
 
 def test_streamlit_interface():
     """Test the Streamlit UI with Playwright"""
