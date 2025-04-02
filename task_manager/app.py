@@ -29,7 +29,18 @@ def main():
             st.info("No tasks yet. Add one above!")
         else:
             for task in tasks:
-                st.write(f"- {task['description']}")
+                col1, col2 = st.columns([4, 1])
+                with col1:
+                    st.write(f"- {task['description']}")
+                with col2:
+                    if st.button("Delete", key=f"delete_{task['id']}"):
+                        try:
+                            with db.conn.cursor() as cur:
+                                cur.execute("DELETE FROM tasks WHERE id = %s", (task['id'],))
+                                db.conn.commit()
+                            st.experimental_rerun()
+                        except (RuntimeError, psycopg2.Error) as e:
+                            st.error(f"Error deleting task: {str(e)}")
     except (RuntimeError, psycopg2.Error) as e:
         st.error(f"Error loading tasks: {str(e)}")
 

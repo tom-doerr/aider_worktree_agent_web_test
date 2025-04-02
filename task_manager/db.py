@@ -66,5 +66,15 @@ class TaskDB:
             self.conn.rollback()
             raise RuntimeError(f"Failed to delete tasks: {str(e)}") from e
 
+    def delete_task(self, task_id):
+        """Delete a specific task from database"""
+        try:
+            with self.conn.cursor() as cur:
+                cur.execute("DELETE FROM tasks WHERE id = %s", (task_id,))
+                self.conn.commit()
+        except Exception as e:
+            self.conn.rollback()
+            raise RuntimeError(f"Failed to delete task: {str(e)}") from e
+
     def close(self):
         self.conn.close()

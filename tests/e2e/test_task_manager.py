@@ -164,4 +164,8 @@ def test_streamlit_interface():
         # Verify task appears
         expect(page.get_by_text(test_task)).to_be_visible()
 
+        # Test deleting a task
+        page.get_by_role("button", name="Delete").click()
+        expect(page.get_by_text(test_task)).not_to_be_visible()
+
         browser.close()
