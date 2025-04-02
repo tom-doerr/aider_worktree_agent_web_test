@@ -63,20 +63,31 @@ def test_delete_all_tasks(task_db):
     task_db.delete_all_tasks()
     assert len(task_db.list_tasks()) == 0
 
+def test_delete_single_task(task_db):
+    """Test deleting a single task"""
+    task_db.delete_all_tasks()
+    task_db.add_task("Task to keep")
+    task_id = task_db.add_task("Task to delete")
+    
+    task_db.delete_task(task_id)
+    tasks = task_db.list_tasks()
+    assert len(tasks) == 1
+    assert tasks[0]["description"] == "Task to keep"
+
 
 def test_db_schema(task_db):
     """Test database schema exists and is correct"""
-    # First ensure table exists
+    # Verify table exists
     with task_db.conn.cursor() as cur:
         cur.execute(
             """
-            CREATE TABLE IF NOT EXISTS tasks (
-                id SERIAL PRIMARY KEY,
-                description TEXT NOT NULL
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'tasks'
             )
-        """
+            """
         )
-        task_db.conn.commit()
+        assert cur.fetchone()[0], "tasks table does not exist"
 
     with task_db.conn.cursor() as cur:
         cur.execute(

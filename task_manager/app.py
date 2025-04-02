@@ -5,7 +5,11 @@ from task_manager.db import TaskDB
 
 def main():
     st.title("Task Manager")
-    db = TaskDB()
+    try:
+        db = TaskDB()
+    except RuntimeError as e:
+        st.error(f"Failed to connect to database: {str(e)}")
+        st.stop()
 
     # Add task form
     with st.form("add_task"):

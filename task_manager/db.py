@@ -40,9 +40,12 @@ class TaskDB:
         try:
             with self.conn.cursor() as cur:
                 cur.execute(
-                    "INSERT INTO tasks (description) VALUES (%s)", (description,)
+                    "INSERT INTO tasks (description) VALUES (%s) RETURNING id", 
+                    (description,)
                 )
+                task_id = cur.fetchone()[0]
                 self.conn.commit()
+                return task_id
         except Exception as e:
             self.conn.rollback()
             raise RuntimeError(f"Failed to add task: {str(e)}") from e
