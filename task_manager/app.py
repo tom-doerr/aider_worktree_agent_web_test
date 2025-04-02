@@ -1,4 +1,5 @@
 import streamlit as st
+import psycopg2
 from task_manager.db import TaskDB
 
 
@@ -17,7 +18,7 @@ def main():
                 try:
                     db.add_task(task)
                     st.success("Task added successfully!")
-                except Exception as e:
+                except (RuntimeError, psycopg2.Error) as e:
                     st.error(f"Error adding task: {str(e)}")
 
     # List tasks
@@ -29,7 +30,7 @@ def main():
         else:
             for task in tasks:
                 st.write(f"- {task['description']}")
-    except Exception as e:
+    except (RuntimeError, psycopg2.Error) as e:
         st.error(f"Error loading tasks: {str(e)}")
 
 
