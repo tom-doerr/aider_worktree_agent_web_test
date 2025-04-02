@@ -66,6 +66,16 @@ def test_delete_all_tasks(task_db):
 
 def test_db_schema(task_db):
     """Test database schema exists and is correct"""
+    # First ensure table exists
+    with task_db.conn.cursor() as cur:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS tasks (
+                id SERIAL PRIMARY KEY,
+                description TEXT NOT NULL
+            )
+        """)
+        task_db.conn.commit()
+
     with task_db.conn.cursor() as cur:
         cur.execute(
             """
@@ -118,7 +128,19 @@ def streamlit_app():
         process.terminate()
 
 
-def test_streamlit_interface(_):
+def test_empty_task_submission(streamlit_app):
+    """Test submitting empty task shows error"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.goto("http://localhost:8501")
+        
+        # Submit empty task
+        page.get_by_role("button", name="Add").click()
+        expect(page.get_by_text("Please enter a task description")).to_be_visible()
+        browser.close()
+
+def test_streamlit_interface(streamlit_app):
     """Test the Streamlit UI with Playwright"""
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
