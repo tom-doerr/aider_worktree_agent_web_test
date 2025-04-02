@@ -8,16 +8,29 @@ def main():
 
     # Add task form
     with st.form("add_task"):
-        task = st.text_input("New task")
+        task = st.text_input("New task", placeholder="Enter task description...")
         submitted = st.form_submit_button("Add")
-        if submitted and task:
-            db.add_task(task)
+        if submitted:
+            if not task:
+                st.error("Please enter a task description")
+            else:
+                try:
+                    db.add_task(task)
+                    st.success("Task added successfully!")
+                except Exception as e:
+                    st.error(f"Error adding task: {str(e)}")
 
     # List tasks
-    tasks = db.list_tasks()
     st.write("## Your Tasks")
-    for task in tasks:
-        st.write(f"- {task['description']}")
+    try:
+        tasks = db.list_tasks()
+        if not tasks:
+            st.info("No tasks yet. Add one above!")
+        else:
+            for task in tasks:
+                st.write(f"- {task['description']}")
+    except Exception as e:
+        st.error(f"Error loading tasks: {str(e)}")
 
 
 if __name__ == "__main__":

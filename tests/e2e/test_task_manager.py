@@ -57,6 +57,12 @@ def test_db_connection_failure(monkeypatch):
         TaskDB(max_retries=1, retry_delay=0)
 
 
+def test_delete_all_tasks(task_db):
+    """Test deleting all tasks"""
+    task_db.add_task("Test task to delete")
+    task_db.delete_all_tasks()
+    assert len(task_db.list_tasks()) == 0
+
 def test_db_schema(task_db):
     """Test database schema exists and is correct"""
     with task_db.conn.cursor() as cur:
@@ -111,7 +117,7 @@ def streamlit_app():
         process.terminate()
 
 
-def test_streamlit_interface(_streamlit_app):
+def test_streamlit_interface(streamlit_app):
     """Test the Streamlit UI with Playwright"""
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)

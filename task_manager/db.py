@@ -33,19 +33,36 @@ class TaskDB:
         ) from last_error
 
     def add_task(self, description):
-        with self.conn.cursor() as cur:
-            cur.execute("INSERT INTO tasks (description) VALUES (%s)", (description,))
-            self.conn.commit()
+        """Add a new task to the database"""
+        if not description:
+            raise ValueError("Task description cannot be empty")
+            
+        try:
+            with self.conn.cursor() as cur:
+                cur.execute("INSERT INTO tasks (description) VALUES (%s)", (description,))
+                self.conn.commit()
+        except Exception as e:
+            self.conn.rollback()
+            raise RuntimeError(f"Failed to add task: {str(e)}") from e
 
     def list_tasks(self):
-        with self.conn.cursor() as cur:
-            cur.execute("SELECT id, description FROM tasks")
-            return [{"id": row[0], "description": row[1]} for row in cur.fetchall()]
+        """List all tasks from database"""
+        try:
+            with self.conn.cursor() as cur:
+                cur.execute("SELECT id, description FROM tasks ORDER BY id")
+                return [{"id": row[0], "description": row[1]} for row in cur.fetchall()]
+        except Exception as e:
+            raise RuntimeError(f"Failed to list tasks: {str(e)}") from e
 
     def delete_all_tasks(self):
-        with self.conn.cursor() as cur:
-            cur.execute("DELETE FROM tasks")
-            self.conn.commit()
+        """Delete all tasks from database"""
+        try:
+            with self.conn.cursor() as cur:
+                cur.execute("DELETE FROM tasks")
+                self.conn.commit()
+        except Exception as e:
+            self.conn.rollback()
+            raise RuntimeError(f"Failed to delete tasks: {str(e)}") from e
 
     def close(self):
         self.conn.close()
